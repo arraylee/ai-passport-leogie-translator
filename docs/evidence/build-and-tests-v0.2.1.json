@@ -1,0 +1,38 @@
+{
+  "version": "0.2.1",
+  "sdk": "ESP-IDF 6.1",
+  "app_bytes": 3387648,
+  "app_sha256": "d1f3f1eaa11ffec32afe5aa54c8f33452187f00b369df223c46f50146751a1e1",
+  "web_bytes": 3453184,
+  "web_erase_end": "0x34c000",
+  "protected_start": "0x356000",
+  "font_storage": "embedded-app",
+  "glyphs": 7172,
+  "gb2312_han": 6763,
+  "font_pixels": 20,
+  "font_bpp": 4,
+  "static_dram_used_bytes": 105052,
+  "static_dram_remaining_bytes": 216244,
+  "host_suite": {
+    "ran": 142,
+    "skipped": 1,
+    "result": "OK"
+  },
+  "native_preview_no_external_partition": "PASS",
+  "pixel_identical_to_v020": [
+    "idle",
+    "listening",
+    "speaking",
+    "english",
+    "long-1",
+    "long-2",
+    "notification"
+  ],
+  "representative_nontranslator_build": "PASS; folotoy/ai-passport; current shared source byte-compared",
+  "device_flashing_performed": false,
+  "physical_acceptance": "NOT_RUN_FOR_0.2.1",
+  "official_cloud_acceptance": "NOT_RUN_FOR_0.2.1",
+  "prior_user_acceptance": "0.2.0 UI and long utterance confirmed; not counted as current acceptance",
+  "source_url": null,
+  "full_font_notices_in_bin": true
+}

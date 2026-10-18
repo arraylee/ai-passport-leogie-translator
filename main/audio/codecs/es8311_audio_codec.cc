@@ -1,4 +1,5 @@
 #include "es8311_audio_codec.h"
+#include <algorithm>
 
 #include <esp_log.h>
 #include <freertos/FreeRTOS.h>
@@ -176,6 +177,15 @@ void Es8311AudioCodec::SetOutputVolume(int volume) {
         ESP_ERROR_CHECK(esp_codec_dev_set_out_vol(dev_, volume));
     }
     AudioCodec::SetOutputVolume(volume);
+}
+
+void Es8311AudioCodec::SetTransientOutputVolume(int volume) {
+    std::lock_guard<std::mutex> lock(data_if_mutex_);
+    volume = std::max(0, std::min(100, volume));
+    if (dev_ != nullptr) {
+        ESP_ERROR_CHECK(esp_codec_dev_set_out_vol(dev_, volume));
+    }
+    output_volume_ = volume;
 }
 
 void Es8311AudioCodec::EnableInput(bool enable) {

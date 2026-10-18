@@ -1,0 +1,77 @@
+{
+  "format": "LVGL I8 BGRA palette",
+  "poses": [
+    "idle",
+    "listening",
+    "thinking",
+    "speaking"
+  ],
+  "source_sha256": "91350b6621a843643fd0d685e797e55071566931677c432e61d27c2cfbb1372c",
+  "frames": [
+    {
+      "pose": "idle",
+      "size": "large",
+      "width": 180,
+      "height": 160,
+      "bytes": 29824,
+      "sha256": "7c2e01c2c79d98bf96a92b286142c79eeaeace04abb40557b59b400d5a74bcd3"
+    },
+    {
+      "pose": "listening",
+      "size": "large",
+      "width": 180,
+      "height": 160,
+      "bytes": 29824,
+      "sha256": "1d855156d7c1df178cde62e4aa2065756d8b13ad1d6c93bd0aced60e142ae5d9"
+    },
+    {
+      "pose": "thinking",
+      "size": "large",
+      "width": 180,
+      "height": 160,
+      "bytes": 29824,
+      "sha256": "a74cc1ea315adaadcceb9babe45f9dc268d982314c0bb0f7144a78763e1021c3"
+    },
+    {
+      "pose": "speaking",
+      "size": "large",
+      "width": 180,
+      "height": 160,
+      "bytes": 29824,
+      "sha256": "88e80583358f53168fac3558622a91966c4af2e12035d2cb9ba778e40c11aa0b"
+    },
+    {
+      "pose": "idle",
+      "size": "small",
+      "width": 120,
+      "height": 106,
+      "bytes": 13744,
+      "sha256": "18bc396b87d3a465f9c6c241113219792cd0d1935fbb19310f11cf5c15e47b53"
+    },
+    {
+      "pose": "listening",
+      "size": "small",
+      "width": 120,
+      "height": 106,
+      "bytes": 13744,
+      "sha256": "8e61fe0850671059cad87c99f28431be2ff6406d4312acda90803c0b1f1bb7bf"
+    },
+    {
+      "pose": "thinking",
+      "size": "small",
+      "width": 120,
+      "height": 106,
+      "bytes": 13744,
+      "sha256": "506b678f338faa3a15d0bcfa50143026f348c2f0d3edaae42a8e3b610d292c91"
+    },
+    {
+      "pose": "speaking",
+      "size": "small",
+      "width": 120,
+      "height": 106,
+      "bytes": 13744,
+      "sha256": "a91c092520915db97f29417c0c515722ea03444911ecd5966fa5cf78a7b1c3a7"
+    }
+  ],
+  "total_bytes": 174272
+}

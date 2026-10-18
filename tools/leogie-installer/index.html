@@ -1,0 +1,41 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Leogie 翻译器安装</title>
+<style>body{max-width:660px;margin:9vh auto;padding:24px;font:17px/1.8 system-ui;background:#f6f3eb;color:#183e35}h1{font-size:30px}button{font:inherit;padding:12px 24px;border:0;border-radius:12px;background:#284c45;color:white;cursor:pointer}button:disabled{opacity:.5;cursor:wait}progress{width:100%;margin-top:24px}pre{font:13px/1.5 monospace;white-space:pre-wrap;max-height:180px;overflow:auto}small{color:#65716c}#status{min-height:50px}</style>
+<h1>Leogie 中英翻译器</h1><p>用 USB 数据线连接 AI PASSPORT，在 Chrome 或 Edge 中安装。</p>
+<p>安装后，按一下开始连续翻译，再按一下结束。设备通过 Wi-Fi 直接连接小智云端；首次使用需在小智控制台绑定设备并设置翻译角色。</p>
+<p id="status" role="status">正在检查安装包…</p><button id="install" disabled>连接设备并安装</button>
+<progress id="progress" max="100" value="0"></progress>
+<p><small>程序会分段写入固件（字体已内置），并校验设备身份区域。安装期间保持 USB 连接。现有固件将被替换。</small></p>
+<details><summary>安装日志</summary><pre id="log"></pre></details>
+<script src="vendor/spark-md5-3.0.2.js"></script>
+<script type="module">
+import {ESPLoader,Transport} from './vendor/esptool-0.7.0.js';
+import {prepareFiles,flashVerified} from './flash-plan.mjs';
+const button=document.querySelector('#install'),status=document.querySelector('#status'),log=document.querySelector('#log');
+const print=value=>{log.textContent=(log.textContent+'\n'+value).slice(-10000);log.scrollTop=log.scrollHeight;};
+let files;
+try {
+ if(!navigator.serial) throw new Error('请使用桌面 Chrome 或 Edge 打开本页面。');
+ const response=await fetch('../manifest.json');if(!response.ok) throw new Error('未找到安装包，请完整解压 ZIP 后重新打开。');
+ files=await prepareFiles(await response.json(),async name=>{
+  const file=await fetch('../'+name);if(!file.ok) throw new Error('缺少文件：'+name);return new Uint8Array(await file.arrayBuffer());
+ });
+ status.textContent='安装包校验通过，可以连接设备。';button.disabled=false;
+} catch(error){status.textContent=error.message;}
+button.addEventListener('click',async()=>{
+ button.disabled=true;let transport;
+ try {
+  const port=await navigator.serial.requestPort();
+  transport=new Transport(port,true);
+  const loader=new ESPLoader({transport,baudrate:460800,romBaudrate:115200,
+   terminal:{clean:()=>{log.textContent='';},write:print,writeLine:print},debugLogging:false});
+  status.textContent='正在连接设备…';await loader.main();
+  status.textContent='正在安装，请保持 USB 连接…';
+  await flashVerified(loader,files,image=>SparkMD5.ArrayBuffer.hash(image.buffer.slice(image.byteOffset,image.byteOffset+image.byteLength)),
+    (index,written,total)=>{document.querySelector('#progress').value=(index+written/total)/files.length*100;});
+  await loader.after('hard_reset');
+  status.textContent='写入及校验完成。请配置 Wi-Fi，在小智控制台绑定设备并粘贴安装包里的翻译角色配置。';
+ } catch(error){status.textContent='安装未完成：'+error.message;print(error.stack||error.message);}
+ finally {if(transport){try{await transport.disconnect();}catch{}}button.disabled=false;}
+});
+</script></html>

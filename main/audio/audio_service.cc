@@ -310,8 +310,18 @@ void AudioService::AudioInputTask() {
         if (bits & (AS_EVENT_WAKE_WORD_RUNNING | AS_EVENT_AUDIO_PROCESSOR_RUNNING)) {
             int samples = 160;  // 10ms
             std::vector<int16_t> data;
+#if CONFIG_LEOGIE_TRANSLATOR
+            const auto capture_epoch = capture_generation_.snapshot();
+#endif
             if (ReadAudioData(data, 16000, samples)) {
+#if CONFIG_LEOGIE_TRANSLATOR
+                // LiteAudioEngine emits synchronously. Stop/start cannot clear
+                // its partial PCM buffer while this admitted feed is running.
+                capture_generation_.Admit(capture_epoch,
+                                          [&] { audio_engine_->Feed(std::move(data)); });
+#else
                 audio_engine_->Feed(std::move(data));
+#endif
                 continue;
             }
         }
@@ -490,16 +500,24 @@ void AudioService::OpusCodecTask() {
                     packet->payload.resize(out.encoded_bytes);
 
                     if (task.type == kAudioTaskTypeEncodeToSendQueue) {
-                        {
-                            std::lock_guard<std::mutex> lock2(audio_queue_mutex_);
-                            /* Never let a full send queue stall encoding: stale realtime
-                             * audio is useless to the server, so drop the oldest packet. */
-                            if (audio_send_queue_.size() >= MAX_SEND_PACKETS_IN_QUEUE) {
-                                audio_send_queue_.pop_front();
+#if CONFIG_LEOGIE_TRANSLATOR
+                        const bool published = capture_generation_.Admit(task.capture_epoch, [&] {
+#endif
+                            {
+                                std::lock_guard<std::mutex> lock2(audio_queue_mutex_);
+                                /* Never let a full send queue stall encoding: stale realtime
+                                 * audio is useless to the server, so drop the oldest packet. */
+                                if (audio_send_queue_.size() >= MAX_SEND_PACKETS_IN_QUEUE) {
+                                    audio_send_queue_.pop_front();
+                                }
+                                audio_send_queue_.push_back(std::move(packet));
                             }
-                            audio_send_queue_.push_back(std::move(packet));
-                        }
+#if CONFIG_LEOGIE_TRANSLATOR
+                        });
+                        if (published && callbacks_.on_send_queue_available) {
+#else
                         if (callbacks_.on_send_queue_available) {
+#endif
                             callbacks_.on_send_queue_available();
                         }
                     } else if (task.type == kAudioTaskTypeEncodeToTestingQueue) {
@@ -570,6 +588,10 @@ void AudioService::PushTaskToEncodeQueue(AudioTaskType type, std::vector<int16_t
     AudioTask task;
     task.type = type;
     task.pcm = std::move(pcm);
+#if CONFIG_LEOGIE_TRANSLATOR
+    // Called synchronously inside the admitted LiteAudioEngine feed above.
+    task.capture_epoch = capture_generation_.snapshot();
+#endif
 
     uint32_t dropped_total = 0;
     {
@@ -725,12 +747,31 @@ void AudioService::EnableVoiceProcessing(bool enable) {
                 esp_ae_rate_cvt_reset(input_resampler_);
             }
         }
+#if CONFIG_LEOGIE_TRANSLATOR
+        capture_generation_.Change(true, [&] {
+            audio_engine_->EnableVoiceProcessing(false);
+            audio_engine_->EnableVoiceProcessing(true);
+            std::lock_guard<std::mutex> lock(audio_queue_mutex_);
+            audio_encode_queue_.clear();
+            audio_send_queue_.clear();
+        });
+#else
         audio_engine_->EnableVoiceProcessing(true);
+#endif
         xEventGroupSetBits(event_group_, AS_EVENT_AUDIO_PROCESSOR_RUNNING);
     } else {
-        if (audio_engine_initialized_) {
-            audio_engine_->EnableVoiceProcessing(false);
-        }
+#if CONFIG_LEOGIE_TRANSLATOR
+        capture_generation_.Change(false, [&] {
+#endif
+            if (audio_engine_initialized_) {
+                audio_engine_->EnableVoiceProcessing(false);
+            }
+#if CONFIG_LEOGIE_TRANSLATOR
+            std::lock_guard<std::mutex> lock(audio_queue_mutex_);
+            audio_encode_queue_.clear();
+            audio_send_queue_.clear();
+        });
+#endif
         xEventGroupClearBits(event_group_, AS_EVENT_AUDIO_PROCESSOR_RUNNING);
     }
 }

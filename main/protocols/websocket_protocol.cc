@@ -216,7 +216,9 @@ std::string WebsocketProtocol::GetHelloMessage() {
 #if CONFIG_USE_SERVER_AEC
     cJSON_AddBoolToObject(features, "aec", true);
 #endif
+#if !CONFIG_LEOGIE_TRANSLATOR
     cJSON_AddBoolToObject(features, "mcp", true);
+#endif
     cJSON_AddItemToObject(root, "features", features);
     AddTextFontCapabilities(root);
     cJSON_AddStringToObject(root, "transport", "websocket");

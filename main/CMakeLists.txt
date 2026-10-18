@@ -1,5 +1,8 @@
+if(CONFIG_LEOGIE_TRANSLATOR)
+    set(LEOGIE_SOURCES "translator/leogie_application.cc")
+endif()
 # Define source files
-set(SOURCES "audio/audio_codec.cc"
+set(SOURCES ${LEOGIE_SOURCES} "audio/audio_codec.cc"
             "audio/audio_debugger.cc"
             "audio/audio_service.cc"
             "audio/demuxer/ogg_demuxer.cc"
@@ -840,6 +843,10 @@ elseif(CONFIG_BOARD_TYPE_LABPLUS_LEDONG_V2)
     set(BUILTIN_TEXT_FONT font_noto_sans_basic_20_4)
     set(BUILTIN_ICON_FONT font_material_symbols_20_4)
     set(DEFAULT_EMOJI_COLLECTION noto-color-emoji_64)
+elseif(CONFIG_BOARD_TYPE_AI_PASSPORT_LEOGIE)
+    set(BOARD_DIR "ai-passport-leogie")
+    set(BUILTIN_TEXT_FONT leogie_font20)
+    set(BUILTIN_ICON_FONT leogie_font20)
 elseif(CONFIG_BOARD_TYPE_SURFER_C3_1_14TFT)
     set(BOARD_DIR "surfer-c3-1.14tft")
     set(BUILTIN_TEXT_FONT font_noto_sans_basic_20_4)
@@ -1165,12 +1172,17 @@ if(NOT CMAKE_BUILD_EARLY_EXPANSION AND NOT BOARD_NAME MATCHES "^[a-z0-9.-]+$")
         "Invalid BOARD_NAME '${BOARD_NAME}': only lowercase letters, digits, '.' and '-' are allowed"
     )
 endif()
-string(REGEX MATCH "^font_noto_sans_basic_([0-9]+)_([0-9]+)$" _font_match "${BUILTIN_TEXT_FONT}")
-if(NOT _font_match)
-    message(FATAL_ERROR "Unsupported built-in text font name: ${BUILTIN_TEXT_FONT}")
+if(CONFIG_BOARD_TYPE_AI_PASSPORT_LEOGIE)
+    set(TEXT_FONT_SIZE 20)
+    set(TEXT_FONT_BPP 4)
+else()
+    string(REGEX MATCH "^font_noto_sans_basic_([0-9]+)_([0-9]+)$" _font_match "${BUILTIN_TEXT_FONT}")
+    if(NOT _font_match)
+        message(FATAL_ERROR "Unsupported built-in text font name: ${BUILTIN_TEXT_FONT}")
+    endif()
+    set(TEXT_FONT_SIZE "${CMAKE_MATCH_1}")
+    set(TEXT_FONT_BPP "${CMAKE_MATCH_2}")
 endif()
-set(TEXT_FONT_SIZE "${CMAKE_MATCH_1}")
-set(TEXT_FONT_BPP "${CMAKE_MATCH_2}")
 if(NOT CMAKE_BUILD_EARLY_EXPANSION)
     target_compile_definitions(${COMPONENT_LIB}
                         PRIVATE BOARD_TYPE=\"${BOARD_TYPE}\" BOARD_NAME=\"${BOARD_NAME}\"

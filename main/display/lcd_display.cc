@@ -28,8 +28,14 @@ LV_FONT_DECLARE(font_noto_emoji_30_4);
 void LcdDisplay::InitializeLcdThemes() {
     auto text_font = std::make_shared<LvglBuiltInFont>(&BUILTIN_TEXT_FONT);
     auto icon_font = std::make_shared<LvglBuiltInFont>(&BUILTIN_ICON_FONT);
+#if CONFIG_BOARD_TYPE_AI_PASSPORT_LEOGIE
+    // The custom translator UI uses native shapes and its own character sprites.
+    auto large_icon_font = icon_font;
+    auto emoji_font = text_font;
+#else
     auto large_icon_font = std::make_shared<LvglBuiltInFont>(&font_material_symbols_30_4);
     auto emoji_font = std::make_shared<LvglBuiltInFont>(&font_noto_emoji_30_4);
+#endif
 
     // light theme
     auto light_theme = new LvglTheme("light");

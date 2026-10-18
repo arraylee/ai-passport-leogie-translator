@@ -24,6 +24,10 @@
 #include "fixed_queue.h"
 #include "ogg_demuxer.h"
 #include "protocol.h"
+#if CONFIG_LEOGIE_TRANSLATOR
+#include "translator/capture_generation.h"
+static_assert(CONFIG_IDF_TARGET_ESP32C3, "Leogie capture uses the synchronous C3 LiteAudioEngine");
+#endif
 
 /*
  * There are two types of audio data flow:
@@ -97,6 +101,9 @@ enum AudioTaskType {
 
 struct AudioTask {
     AudioTaskType type;
+#if CONFIG_LEOGIE_TRANSLATOR
+    uint32_t capture_epoch = 0;
+#endif
     std::vector<int16_t> pcm;
     uint32_t timestamp = 0;
     uint32_t playback_id = 0;
@@ -180,6 +187,9 @@ private:
     TaskHandle_t audio_output_task_handle_ = nullptr;
     TaskHandle_t opus_codec_task_handle_ = nullptr;
     std::mutex audio_queue_mutex_;
+#if CONFIG_LEOGIE_TRANSLATOR
+    leogie::CaptureGeneration capture_generation_;
+#endif
     std::condition_variable audio_queue_cv_;
     // Testing records up to AUDIO_TESTING_MAX_DURATION_MS, then swaps into the
     // decode queue. Both queues must share this capacity so swap() is valid.

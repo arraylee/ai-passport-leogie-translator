@@ -106,10 +106,13 @@ void Application::Initialize() {
     // Start the clock timer to update the status bar
     esp_timer_start_periodic(clock_timer_handle_, 1000000);
 
+    // Translator mode does not advertise or execute MCP tools.
+#if !CONFIG_LEOGIE_TRANSLATOR
     // Add MCP common tools (only once during initialization)
     auto& mcp_server = McpServer::GetInstance();
     mcp_server.AddCommonTools();
     mcp_server.AddUserOnlyTools();
+#endif
 
     // Set network event callback for UI updates and network state handling
     board.SetNetworkEventCallback([this](NetworkEvent event, const std::string& data) {
@@ -244,7 +247,18 @@ void Application::Run() {
 
         if (bits & MAIN_EVENT_SEND_AUDIO) {
             while (auto packet = audio_service_.PopPacketFromSendQueue()) {
+#if CONFIG_LEOGIE_TRANSLATOR
+                if (!translator_session_.active() || GetDeviceState() != kDeviceStateListening ||
+                    pending_listening_start_)
+                    continue;
+#endif
                 if (protocol_ && !protocol_->SendAudio(std::move(packet))) {
+#if CONFIG_LEOGIE_TRANSLATOR
+                    ++translator_send_failures_;
+                    if (translator_send_failures_ == 1 || translator_send_failures_ % 100 == 0)
+                        ESP_LOGW("LeogieDiag", "audio_send_failed total=%lu",
+                                 (unsigned long)translator_send_failures_);
+#endif
                     // Drop the remaining packets. Leaving them in the queue would
                     // stall the Opus codec task (it waits for queue space), which in
                     // turn deadlocks the whole audio input pipeline, as no new
@@ -253,6 +267,10 @@ void Application::Run() {
                         ;
                     break;
                 }
+#if CONFIG_LEOGIE_TRANSLATOR
+                if (protocol_)
+                    ++translator_sent_packets_;
+#endif
             }
         }
 
@@ -284,6 +302,13 @@ void Application::Run() {
             // Print debug info every 10 seconds
             if (clock_ticks_ % 10 == 0) {
                 SystemInfo::PrintHeapStats();
+#if CONFIG_LEOGIE_TRANSLATOR
+                if (translator_session_.active())
+                    ESP_LOGI("LeogieDiag", "state=%d sent=%lu received=%u send_failures=%lu",
+                             (int)GetDeviceState(), (unsigned long)translator_sent_packets_,
+                             translator_received_packets_.load(),
+                             (unsigned long)translator_send_failures_);
+#endif
                 // SystemInfo::PrintTaskList();
                 // SystemInfo::PrintTaskCpuUsage(pdMS_TO_TICKS(1000));
             }
@@ -323,6 +348,11 @@ void Application::HandleNetworkConnectedEvent() {
 }
 
 void Application::HandleNetworkDisconnectedEvent() {
+#if CONFIG_LEOGIE_TRANSLATOR
+    if (translator_session_.active())
+        StopTranslator("网络已断开，请重试");
+    return;
+#endif
     // Close current conversation when network disconnected
     auto state = GetDeviceState();
     if (state == kDeviceStateNotifying) {
@@ -503,6 +533,7 @@ void Application::CheckNewVersion() {
         retry_count = 0;
         retry_delay = 10;  // Reset retry delay
 
+#if !CONFIG_LEOGIE_TRANSLATOR
         if (ota_->HasNewVersion()) {
             if (UpgradeFirmware(ota_->GetFirmwareUrl(), ota_->GetFirmwareVersion())) {
                 return;  // This line will never be reached after reboot
@@ -510,6 +541,8 @@ void Application::CheckNewVersion() {
             // If upgrade failed, continue to normal operation
         }
 
+#endif
+        // Translator uses cloud provisioning but never installs a generic OTA image.
         // No new version, mark the current version as valid
         ota_->MarkCurrentVersionValid();
         if (!ota_->HasActivationCode() && !ota_->HasActivationChallenge()) {
@@ -542,6 +575,12 @@ void Application::CheckNewVersion() {
 }
 
 void Application::InitializeProtocol() {
+#if CONFIG_LEOGIE_TRANSLATOR
+    // Keep the official activation-provisioned endpoint/authentication unchanged.
+    translator_transport_ =
+        leogie::SelectCloudTransport(ota_->HasMqttConfig(), ota_->HasWebsocketConfig());
+    return;
+#endif
     auto& board = Board::GetInstance();
     auto display = board.GetDisplay();
     auto codec = board.GetAudioCodec();
@@ -753,6 +792,11 @@ void Application::ShowActivationCode(const std::string& code, const std::string&
     // This sentence uses 9KB of SRAM, so we need to wait for it to finish
     Alert(Lang::Strings::ACTIVATION, message.c_str(), "link", Lang::Sounds::OGG_ACTIVATION);
 
+#if CONFIG_LEOGIE_TRANSLATOR
+    auto display = Board::GetInstance().GetDisplay();
+    display->SetChatMessage("user", "打开 xiaozhi.me 绑定设备");
+    display->SetChatMessage("assistant", code.c_str());
+#endif
     for (const auto& digit : code) {
         auto it = std::find_if(digit_sounds.begin(), digit_sounds.end(),
                                [digit](const digit_sound& ds) { return ds.digit == digit; });
@@ -784,7 +828,13 @@ void Application::DismissAlert() {
     }
 }
 
-void Application::ToggleChatState() { xEventGroupSetBits(event_group_, MAIN_EVENT_TOGGLE_CHAT); }
+void Application::ToggleChatState() {
+#if CONFIG_LEOGIE_TRANSLATOR
+    Schedule([this]() { ToggleTranslator(); });
+#else
+    xEventGroupSetBits(event_group_, MAIN_EVENT_TOGGLE_CHAT);
+#endif
+}
 
 void Application::StartListening() { xEventGroupSetBits(event_group_, MAIN_EVENT_START_LISTENING); }
 
@@ -1064,7 +1114,11 @@ void Application::HandleStateChangedEvent() {
                 // Only AFE wake word can be detected in speaking mode
                 audio_service_.EnableWakeWordDetection(audio_service_.IsAfeWakeWord());
             }
+#if !CONFIG_LEOGIE_TRANSLATOR
             audio_service_.ResetDecoder();
+#endif
+            // Translator resets synchronously on tts/start before queued audio.
+            // Standard XiaoZhi servers need no custom listen/stop acknowledgement.
             break;
         case kDeviceStateNotifying:
             display->SetStatus(Lang::Strings::SPEAKING);
@@ -1150,6 +1204,10 @@ void Application::HideStartupWakeWordHint() {
 }
 
 void Application::StartListeningAudio() {
+#if CONFIG_LEOGIE_TRANSLATOR
+    if (!translator_session_.active() || !protocol_)
+        return;
+#endif
     // Runs in the main loop, either directly from HandleStateChangedEvent or
     // deferred via MAIN_EVENT_PLAYBACK_DRAINED once the playback queue drains.
     if (GetDeviceState() != kDeviceStateListening) {
@@ -1442,6 +1500,10 @@ void Application::PlaySound(const std::string_view& sound) { audio_service_.Play
 
 void Application::ResetProtocol() {
     Schedule([this]() {
+#if CONFIG_LEOGIE_TRANSLATOR
+        StopTranslator();
+        return;
+#endif
         if (GetDeviceState() == kDeviceStateNotifying) {
             StopNotification();
         }

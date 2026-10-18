@@ -1,0 +1,47 @@
+{
+  "version": "0.3.0",
+  "date": "2026-10-18",
+  "device_flashing_performed": true,
+  "write_verified": true,
+  "segments": [
+    {
+      "file": "bootloader.bin",
+      "address": 0,
+      "size": 15040,
+      "sha256": "b5ef8e6a83b1873686fa185064fbb2fac34b1c76f362aa85bdabf6ddfbc74424"
+    },
+    {
+      "file": "partition-table.bin",
+      "address": 32768,
+      "size": 3072,
+      "sha256": "aa791c41441d08e601a688c76b0acf94dd424b33279c31a9d72f3aa16890508c"
+    },
+    {
+      "file": "leogie-translator.bin",
+      "address": 65536,
+      "size": 3396032,
+      "sha256": "82fbc6854dcad1be3419025d92c41139d82c7e4d1e36a9c65927adb5aa3ad831"
+    }
+  ],
+  "identity_unchanged": true,
+  "nvs_unchanged": true,
+  "boot_version_confirmed": true,
+  "boot_reached_idle": true,
+  "reset_count_in_capture": 1,
+  "initial_reset": "USB_UART_CHIP_RESET from serial monitor attachment",
+  "assertion_count": 0,
+  "panic_count": 0,
+  "capture_ended": "USB serial device became unavailable; no additional reset in captured log; reason not inferred",
+  "user_acceptance": {
+    "countdown_display": true,
+    "alarm": true,
+    "stop_alarm": true,
+    "cancel_and_exit": true,
+    "verbatim": "显示、响铃、停止和退出都正常"
+  },
+  "not_tested_this_version": [
+    "cloud translation regression",
+    "long duration sleep thresholds",
+    "battery-only endurance"
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "type": "ai-passport-leogie",
+  "target": "esp32c3",
+  "builds": [
+    {
+      "name": "ai-passport-leogie",
+      "sdkconfig_append": [
+        "CONFIG_ESPTOOLPY_FLASHSIZE_8MB=y",
+        "CONFIG_ESPTOOLPY_FLASHMODE_DIO=y",
+        "CONFIG_ESPTOOLPY_FLASHFREQ_80M=y",
+        "CONFIG_PARTITION_TABLE_CUSTOM_FILENAME=\"partitions/leogie.csv\"",
+        "CONFIG_ESP_CONSOLE_USB_SERIAL_JTAG=y",
+        "CONFIG_WAKE_WORD_DISABLED=y",
+        "CONFIG_PM_ENABLE=y",
+        "CONFIG_FLASH_NONE_ASSETS=y",
+        "CONFIG_USE_DEFAULT_MESSAGE_STYLE=y",
+        "CONFIG_USE_MULTILINE_CHAT_MESSAGE=y",
+        "CONFIG_USE_DEVICE_AEC=n",
+        "CONFIG_USE_SERVER_AEC=n",
+        "CONFIG_OTA_URL=\"https://api.tenclass.net/xiaozhi/ota/\"",
+        "CONFIG_LEOGIE_TRANSLATOR=y",
+        "CONFIG_APP_PROJECT_VER_FROM_CONFIG=y",
+        "CONFIG_APP_PROJECT_VER=\"leogie-0.3.0\"",
+        "CONFIG_LV_USE_FONT_COMPRESSED=y",
+        "CONFIG_LV_FONT_FMT_TXT_LARGE=y"
+      ]
+    }
+  ]
+}

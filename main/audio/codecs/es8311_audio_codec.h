@@ -36,6 +36,8 @@ public:
     virtual ~Es8311AudioCodec();
 
     virtual void SetOutputVolume(int volume) override;
+    // Temporary board alerts: change live gain without overwriting the saved preference.
+    void SetTransientOutputVolume(int volume);
     virtual void EnableInput(bool enable) override;
     virtual void EnableOutput(bool enable) override;
 };

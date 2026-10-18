@@ -1,5 +1,9 @@
 menu "Xiaozhi Assistant"
 
+config LEOGIE_TRANSLATOR
+    bool "Continuous bilingual translation"
+    default y if BOARD_TYPE_AI_PASSPORT_LEOGIE
+
 config OTA_URL
     string "Default OTA URL"
     default "https://api.tenclass.net/xiaozhi/ota/"
@@ -134,6 +138,9 @@ choice BOARD_TYPE
         Select the physical board hardware implementation.
         The OTA board type and firmware variant name are configured separately.
 
+    config BOARD_TYPE_AI_PASSPORT_LEOGIE
+        bool "AI PASSPORT Leogie Translator"
+        depends on IDF_TARGET_ESP32C3
     config BOARD_TYPE_ATK_DNESP32S3
         bool "Alientek ATK-DNESP32S3 Development Board (正点原子)"
         depends on IDF_TARGET_ESP32S3

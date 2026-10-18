@@ -18,3 +18,16 @@ main/mmap_generate_emoji.h
 *.bin
 mmap_generate_*.h
 .clangd
+
+# Local translator runtime and evidence
+.venv/
+server/.env
+server/runtime/
+.local/
+!assets/leogie/font-bitmap.bin
+
+# Private local publication bookkeeping and implementation notes
+publication/
+docs/superpowers/
+.superpowers/
+assets/leogie/previews/*.ppm

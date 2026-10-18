@@ -1,0 +1,6 @@
+# Name, Type, SubType, Offset, Size
+nvs,data,nvs,0x9000,0x6000
+phy_init,data,phy,0xF000,0x1000
+factory,app,factory,0x10000,0x340000
+legacy_cardid,data,nvs,0x356000,0x4000
+leogie_font,data,0x40,0x360000,0x4A0000

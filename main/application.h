@@ -15,6 +15,9 @@
 #include <vector>
 
 #include "protocol.h"
+#if CONFIG_LEOGIE_TRANSLATOR
+#include "translator/session.h"
+#endif
 #include "ota.h"
 #include "audio_service.h"
 #include "device_state.h"
@@ -132,7 +135,23 @@ private:
 
     std::mutex mutex_;
     std::deque<std::function<void()>> main_tasks_;
+#if CONFIG_LEOGIE_TRANSLATOR
+    std::shared_ptr<Protocol> protocol_;
+    leogie::Session translator_session_;
+    leogie::CloudTransport translator_transport_ = leogie::CloudTransport::None;
+    std::atomic<unsigned> translator_pending_audio_{0};
+    std::atomic<bool> translator_audio_overflow_{false};
+    bool translator_connecting_ = false;
+    uint32_t translator_sent_packets_ = 0;
+    uint32_t translator_send_failures_ = 0;
+    std::atomic<unsigned> translator_received_packets_{0};
+    void ToggleTranslator();
+    void ConnectTranslator();
+    void StopTranslator(const std::string& message = "");
+    void TranslatorJson(const cJSON* root, uint32_t epoch);
+#else
     std::unique_ptr<Protocol> protocol_;
+#endif
     EventGroupHandle_t event_group_ = nullptr;
     esp_timer_handle_t clock_timer_handle_ = nullptr;
     esp_timer_handle_t startup_wake_word_hint_timer_ = nullptr;

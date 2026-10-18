@@ -1,0 +1,4 @@
+#pragma once
+#define LEOGIE_FONT_EMBEDDED 1
+#define LEOGIE_FONT_BYTES 1058059u
+#define LEOGIE_FONT_CRC 0xb22a0f32u

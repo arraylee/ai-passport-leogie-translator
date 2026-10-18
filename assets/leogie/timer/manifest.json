@@ -1,0 +1,10 @@
+{
+  "original_synthesis": true,
+  "duration_ms": 600,
+  "sample_rate": 24000,
+  "opus_frame_ms": 60,
+  "ogg_bytes": 2139,
+  "digits": "0123456789",
+  "font_size": 48,
+  "font_bpp": 4
+}

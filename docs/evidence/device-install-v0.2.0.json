@@ -1,0 +1,41 @@
+{
+  "version": "0.2.0",
+  "date": "2026-10-18",
+  "port": "/dev/cu.usbmodem1101",
+  "device_write_verified": true,
+  "written_segments": [
+    "bootloader at 0x0",
+    "app at 0x10000"
+  ],
+  "verified_segments": [
+    "bootloader",
+    "partition table",
+    "app",
+    "font"
+  ],
+  "protected_range": "0x356000..0x359fff",
+  "protected_bytes_compared": 16384,
+  "device_identity_unchanged": true,
+  "app_sha256": "18dbde66c750327c3f3eb1255b96ba18516e5bbfc4bf383b6d378e44edacf4f3",
+  "boot_version": "leogie-0.2.0",
+  "boot_elf_prefix": "b06899fba",
+  "boot_result": "AUDIO_INITIALIZED_THEN_IDLE",
+  "monitor_connection_reset": "USB_UART_CHIP_RESET at capture baseline",
+  "physical_acceptance": "PARTIAL_USER_CONFIRMED_UI_AND_LONG_UTTERANCE",
+  "cloud_long_utterance_issue": "NOT_REPRODUCED_OR_RESOLVED",
+  "observed_seconds": 95,
+  "post_baseline_resets": 0,
+  "assert_failures": 0,
+  "idle_dim_after_seconds": 60,
+  "heartbeat_after_dim": true,
+  "minimum_free_sram_bytes": 63360,
+  "idle_free_sram_bytes_approx": 105400,
+  "sleep_wake_and_user_translation": "PENDING_USER_TEST",
+  "user_reported_test": {
+    "result": "UI_NORMAL_AND_LONG_UTTERANCE_REPLY_CONFIRMED",
+    "feedback": "界面正常，长句也能回复",
+    "evidence_kind": "DIRECT_USER_CONFIRMATION",
+    "log_correlation": "Capture contains boot/idle only; no LeogieDiag session events captured",
+    "intermittent_no_reply_resolved": false
+  }
+}
